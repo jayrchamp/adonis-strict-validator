@@ -1,0 +1,26 @@
+{
+  "name": "@jayrchamp/adonis-strict-validator",
+  "version": "2.0.0",
+  "main": "index.js",
+  "author": "jayrchamp <champjr@me.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jayrchamp/adonis-strict-validator"
+  },
+  "scripts": {
+    "npm:publish": "npm publish --access public",
+    "mah": "./node_modules/.bin/mah"
+  },
+  "dependencies": {
+    "@adonisjs/generic-exceptions": "^2.0.1",
+    "@adonisjs/validator": "^5.0.6"
+  },
+  "devDependencies": {
+    "@adonisjs/ace": "^5.0.5",
+    "@adonisjs/fold": "^4.0.9",
+    "@jayrchamp/mah-scripts": "^1.1.9"
+  },
+  "mah": {
+    "repo": "jayrchamp/adonis-strict-validator"
+  }
+}
