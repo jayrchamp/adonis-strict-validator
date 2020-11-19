@@ -44,9 +44,7 @@ class StrictMiddlewareValidator extends MiddlewareValidator {
   }
 
   /**
-   * Validates that there is no extra body/query data 
-   * else than the one set in the validator instance rules
-   * on the current request.
+   * Validates that the request body/query is not empty.
    *
    * @method _runNoEmptyValidation
    * @async
