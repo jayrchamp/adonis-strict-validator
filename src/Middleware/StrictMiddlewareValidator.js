@@ -67,10 +67,17 @@ class StrictMiddlewareValidator extends MiddlewareValidator {
       } else {
         wrongFields = fields
       }
+
+      const message = (
+        (
+          validatorInstance.messages && 
+          validatorInstance.messages['strict_fields']
+        ) || `strict validation failed on field`
+      )
           
       if (wrongFields && wrongFields.length > 0) {
         const messages = wrongFields.map(f => ({
-          message: `strict validation failed on field`,
+          message,
           field: f,
           validation: 'strict_fields',
         }))
