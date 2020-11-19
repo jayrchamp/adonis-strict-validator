@@ -22,5 +22,11 @@
   },
   "mah": {
     "repo": "jayrchamp/adonis-strict-validator"
-  }
+  },
+	"keywords": [
+		"validator",
+		"schema-validation",
+    "adonis",
+    "strict"
+	]
 }
