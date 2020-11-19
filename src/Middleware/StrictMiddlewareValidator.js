@@ -30,12 +30,55 @@ class StrictMiddlewareValidator extends MiddlewareValidator {
     /**
      * Run strict validation on request data
      */
+    this._runNoEmptyValidation(ctx, validatorInstance)
+
+    /**
+     * Run strict validation on request data
+     */
     this._runStrictValidation(ctx, validatorInstance)
 
     /**
      * All good, so continue to parent method
      */
     await super.handle(ctx, next, validator)
+  }
+
+  /**
+   * Validates that there is no extra body/query data 
+   * else than the one set in the validator instance rules
+   * on the current request.
+   *
+   * @method _runNoEmptyValidation
+   * @async
+   *
+   * @param  {Object}        ctx
+   * @param  {Object}        validatorInstance
+   *
+   * @return {void}
+   *
+   * @throws {ValidationException}
+   *
+   * @private
+   */
+  _runNoEmptyValidation (ctx, validatorInstance) {
+    if (typeof validatorInstance.noEmpty === 'boolean' && validatorInstance.noEmpty) {
+      const body = ctx.request.all()
+      const fields = Object.keys(body)
+
+      if (fields.length > 0) return
+      
+      const message = (
+        (
+          validatorInstance.messages && 
+          validatorInstance.messages['strict_no_empty']
+        ) || `strict_no_empty validation failed on request`
+      )
+          
+      throw CE.ValidationException.validationFailed([{
+        message,
+        validation: 'strict_no_empty',
+      }])
+    }
   }
 
   /**
