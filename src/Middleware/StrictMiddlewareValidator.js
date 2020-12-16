@@ -11,6 +11,7 @@ class StrictMiddlewareValidator extends MiddlewareValidator {
    * Handle method executed by adonis middleware chain
    *
    * @method handle
+   * @async
    *
    * @param  {Object}   ctx
    * @param  {Function} next
@@ -44,10 +45,11 @@ class StrictMiddlewareValidator extends MiddlewareValidator {
   }
 
   /**
-   * Validates that the request body/query is not empty.
+   * Validates that there is no extra body/query data 
+   * else than the one set in the validator instance rules
+   * on the current request.
    *
    * @method _runNoEmptyValidation
-   * @async
    *
    * @param  {Object}        ctx
    * @param  {Object}        validatorInstance
@@ -84,7 +86,6 @@ class StrictMiddlewareValidator extends MiddlewareValidator {
    * on the current request.
    *
    * @method _runStrictValidation
-   * @async
    *
    * @param  {Object}        ctx
    * @param  {Object}        validatorInstance
