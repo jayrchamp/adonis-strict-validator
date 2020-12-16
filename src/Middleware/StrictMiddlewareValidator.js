@@ -65,13 +65,12 @@ class StrictMiddlewareValidator extends MiddlewareValidator {
 
       if (fields.length > 0) return
       
-      const message = (
-        (
-          validatorInstance.messages && 
-          validatorInstance.messages['strict_no_empty']
-        ) || `strict_no_empty validation failed on request`
+      const message = this._computedValidationMessage(
+        validatorInstance, 
+        'strict_no_empty', 
+        'strict_no_empty validation failed on request'
       )
-          
+
       throw CE.ValidationException.validationFailed([{
         message,
         validation: 'strict_no_empty',
@@ -109,11 +108,11 @@ class StrictMiddlewareValidator extends MiddlewareValidator {
         wrongFields = fields
       }
 
-      const message = (
-        (
-          validatorInstance.messages && 
-          validatorInstance.messages['strict_fields']
-        ) || `strict validation failed on field`
+      const message = this._computedValidationMessage(
+        validatorInstance, 
+        'strict_fields', 
+        'strict validation failed on field',
+        [ wrongFields ]
       )
           
       if (wrongFields && wrongFields.length > 0) {
@@ -125,6 +124,36 @@ class StrictMiddlewareValidator extends MiddlewareValidator {
         throw CE.ValidationException.validationFailed(messages)
       }
     }
+  }
+
+  /**
+   * Compute the validation message that will be displayed
+   * in the Validation Exception.
+   *
+   * @method _computedValidationMessage
+   *
+   * @param  {Object}        validatorInstance
+   * @param  {string}        validation
+   * @param  {string}        fallbackMessage
+   * @param  {array}         args
+   *
+   * @return {string}
+   *
+   * @private
+   */
+  _computedValidationMessage (validatorInstance, validation, fallbackMessage, args) {
+    return (
+      (
+        validatorInstance.messages && 
+        (
+          typeof validatorInstance.messages[validation] === 'function' &&
+          validatorInstance.messages[validation](...args, validation)
+        ) ||
+        (
+          validatorInstance.messages[validation]
+        )
+      ) || fallbackMessage
+    )
   }
 }
 
