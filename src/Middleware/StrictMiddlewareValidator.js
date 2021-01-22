@@ -145,14 +145,8 @@ class StrictMiddlewareValidator extends MiddlewareValidator {
   _computedValidationMessage (validatorInstance, validation, fallbackMessage, args) {
     return (
       (
-        validatorInstance.messages && 
-        (
-          typeof validatorInstance.messages[validation] === 'function' &&
-          validatorInstance.messages[validation](...args, validation)
-        ) ||
-        (
-          validatorInstance.messages[validation]
-        )
+        validatorInstance.messages && (typeof validatorInstance.messages[validation] === 'function' && validatorInstance.messages[validation](...args, validation)) ||
+        validatorInstance.messages && validatorInstance.messages[validation]
       ) || fallbackMessage
     )
   }
