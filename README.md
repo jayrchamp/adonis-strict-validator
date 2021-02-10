@@ -21,7 +21,17 @@ Create a Validator file in App/Validators/  (ex.: App/Validators/Example) and se
 
 class ExampleValidator {
   
+  /**
+   * Deny requests containing an unspecified query string or body in the rules object
+   */
   get strict () {
+    return true
+  }
+
+  /**
+   * Deny request without query string or body
+   */
+  get noEmpty () {
     return true
   }
 
