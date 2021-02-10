@@ -3,7 +3,7 @@ const CE = require('@adonisjs/validator/src/Exceptions')
 const MiddlewareValidator = require('@adonisjs/validator/src/Middleware/Validator')
 
 class StrictMiddlewareValidator extends MiddlewareValidator {
-  constructor (Validator) {
+  constructor(Validator) {
     super(Validator)
   }
 
@@ -19,7 +19,7 @@ class StrictMiddlewareValidator extends MiddlewareValidator {
    *
    * @return {void}
    */
-  async handle (ctx, next, validator) {
+  async handle(ctx, next, validator) {
     validator = validator instanceof Array === true ? validator[0] : validator
 
     if (!validator) {
@@ -28,20 +28,48 @@ class StrictMiddlewareValidator extends MiddlewareValidator {
 
     const validatorInstance = resolver.forDir('validators').resolve(validator)
 
-    /**
-     * Run strict validation on request data
-     */
-    this._runNoEmptyValidation(ctx, validatorInstance)
+    let validationError;
 
-    /**
-     * Run strict validation on request data
-     */
-    this._runStrictValidation(ctx, validatorInstance)
+    try {
+      await super.handle(ctx, next, validator)
+    } catch (error) {
+      if (error.status && error.status === 400) validationError = error;
+    }
 
-    /**
-     * All good, so continue to parent method
-     */
-    await super.handle(ctx, next, validator)
+    if (!validationError) {
+      /**
+       * Run noEmpty validation on request data
+       */
+      this._runNoEmptyValidation(ctx, validatorInstance)
+    }
+
+    let messages = [];
+
+    if (!validationError || (validationError && typeof validatorInstance.validateAll === 'boolean' && validatorInstance.validateAll)) {
+      /**
+       * Run strict validation on request data
+       */
+      const strictValidationMessages = this._runStrictValidation(ctx, validatorInstance)
+
+      if (Array.isArray(strictValidationMessages) && strictValidationMessages.length) {
+        messages = [
+          ...messages,
+          ...strictValidationMessages
+        ];
+      }
+    }
+
+    if (validationError) {
+      validationError.messages = [
+        ...validationError.messages,
+        ...messages
+      ]
+      throw validationError
+    }
+
+    if (messages.length) {
+      throw CE.ValidationException.validationFailed(messages)
+    }
   }
 
   /**
@@ -60,16 +88,16 @@ class StrictMiddlewareValidator extends MiddlewareValidator {
    *
    * @private
    */
-  _runNoEmptyValidation (ctx, validatorInstance) {
+  _runNoEmptyValidation(ctx, validatorInstance) {
     if (typeof validatorInstance.noEmpty === 'boolean' && validatorInstance.noEmpty) {
       const body = ctx.request.all()
       const fields = Object.keys(body)
 
       if (fields.length > 0) return
-      
+
       const message = this._computedValidationMessage(
-        validatorInstance, 
-        'strict_no_empty', 
+        validatorInstance,
+        'strict_no_empty',
         'strict_no_empty validation failed on request'
       )
 
@@ -90,17 +118,15 @@ class StrictMiddlewareValidator extends MiddlewareValidator {
    * @param  {Object}        ctx
    * @param  {Object}        validatorInstance
    *
-   * @return {void}
-   *
-   * @throws {ValidationException}
+   * @return {Array}          messages
    *
    * @private
    */
-  _runStrictValidation (ctx, validatorInstance) {
+  _runStrictValidation(ctx, validatorInstance) {
     if (typeof validatorInstance.strict === 'boolean' && validatorInstance.strict) {
       const body = ctx.request.all()
       const fields = Object.keys(body)
-      
+
       let wrongFields = []
       if (validatorInstance.rules && Object.keys(validatorInstance.rules).length > 0) {
         const availableFields = Object.keys(validatorInstance.rules)
@@ -110,19 +136,19 @@ class StrictMiddlewareValidator extends MiddlewareValidator {
       }
 
       const message = this._computedValidationMessage(
-        validatorInstance, 
-        'strict_fields', 
+        validatorInstance,
+        'strict_fields',
         'strict validation failed on field',
-        [ wrongFields ]
+        [wrongFields]
       )
-          
+
       if (wrongFields && wrongFields.length > 0) {
         const messages = wrongFields.map(f => ({
           message,
           field: f,
           validation: 'strict_fields',
         }))
-        throw CE.ValidationException.validationFailed(messages)
+        return (typeof validatorInstance.validateAll === 'boolean' && validatorInstance.validateAll) ? messages : [messages[0]];
       }
     }
   }
@@ -142,7 +168,7 @@ class StrictMiddlewareValidator extends MiddlewareValidator {
    *
    * @private
    */
-  _computedValidationMessage (validatorInstance, validation, fallbackMessage, args) {
+  _computedValidationMessage(validatorInstance, validation, fallbackMessage, args) {
     return (
       (
         validatorInstance.messages && (typeof validatorInstance.messages[validation] === 'function' && validatorInstance.messages[validation](...args, validation)) ||
