@@ -131,21 +131,22 @@ class StrictMiddlewareValidator extends MiddlewareValidator {
       } else {
         wrongFields = fields
       }
-
-      const message = this._computedValidationMessage(
-        validatorInstance, 
-        'strict_fields', 
-        'strict validation failed on field',
-        [ wrongFields ]
-      )
-          
+   
       if (wrongFields && wrongFields.length > 0) {
-        const messages = wrongFields.map(f => ({
-          message,
-          field: f,
-          validation: 'strict_fields',
-        }))
-        throw CE.ValidationException.validationFailed(messages)
+        const messages = wrongFields.map(f => {
+          const message = this._computedValidationMessage(
+            validatorInstance,
+            'strict_fields',
+            'strict validation failed on field',
+            [ f ]
+          )
+          return {
+            message,
+            field: f,
+            validation: 'strict_fields'
+          }
+        })
+        return (typeof validatorInstance.validateAll === 'boolean' && validatorInstance.validateAll) ? messages : [messages[0]];
       }
     }
   }
