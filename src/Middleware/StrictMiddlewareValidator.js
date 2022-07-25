@@ -1,3 +1,5 @@
+const _ = require('lodash')
+
 const { resolver } = require('@adonisjs/fold')
 const CE = require('@adonisjs/validator/src/Exceptions')
 const MiddlewareValidator = require('@adonisjs/validator/src/Middleware/Validator')
@@ -100,10 +102,31 @@ class StrictMiddlewareValidator extends MiddlewareValidator {
     if (typeof validatorInstance.strict === 'boolean' && validatorInstance.strict) {
       const body = ctx.request.all()
       const fields = Object.keys(body)
+
+      /**
+       * Indicative uses dot notation to target nested properties inside objects and arrays.
+       * Therefore, using Object.keys on validatorInstance.rules would cause sub-level keys 
+       * to be accepted as top-level string keys.
+       * 
+       * e.g.
+       * 
+       * { name: '...', address: '...', address.street': '...' } -> flat
+       * 
+       * { name: '...', address: { street: '...' } } -> unflatten
+       * 
+       * ['name', 'address'] -> result
+       * 
+       * If validatorInstance.rules was left as is, 'address.street' wouldn't 
+       * be considered a wrongField and would bypass the strict validation.
+       */
+      const availableFields = Object.keys(
+        _.reduce(_.keys(validatorInstance.rules), function (result, key) {
+          return _.set(result, key, validatorInstance.rules[key])
+        } ,{})
+      )
       
       let wrongFields = []
-      if (validatorInstance.rules && Object.keys(validatorInstance.rules).length > 0) {
-        const availableFields = Object.keys(validatorInstance.rules)
+      if (validatorInstance.rules && availableFields.length > 0) {
         wrongFields = fields.filter(f => availableFields.indexOf(f) < 0)
       } else {
         wrongFields = fields
